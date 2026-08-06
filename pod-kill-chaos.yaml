@@ -1,0 +1,16 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: cartservice-pod-kill-schedule
+  namespace: chaos-mesh
+spec:
+  schedule: "*/3 * * * *"
+  type: PodChaos
+  podChaos:
+    action: pod-kill
+    mode: one
+    selector:
+      namespaces:
+        - online-boutique
+      labelSelectors:
+        app: cartservice

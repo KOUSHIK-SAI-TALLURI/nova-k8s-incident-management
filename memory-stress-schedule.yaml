@@ -1,0 +1,33 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: productcatalog-memory-stress-schedule
+  namespace: chaos-mesh
+spec:
+  # Fires every 5 minutes — spaced out more than the cartservice
+  # container-kill schedule (every 1 min) so OOM incidents don't overlap
+  # with restart-rate incidents and muddy the corpus/evidence signal.
+  schedule: "*/5 * * * *"
+  startingDeadlineSeconds: 30
+  concurrencyPolicy: Forbid
+  historyLimit: 3
+  type: StressChaos
+  stressChaos:
+    mode: one
+    selector:
+      namespaces:
+        - online-boutique
+      labelSelectors:
+        app: productcatalogservice
+    stressors:
+      memory:
+        workers: 1
+        # IMPORTANT: this must exceed the container's actual memory
+        # limit (check with the kubectl command above) or it will just
+        # cause memory pressure without an actual OOMKilled event.
+        # 300MB is a starting guess — adjust after confirming the real
+        # limit in Step 1. NOTE: StressChaos uses stress-ng's byte-unit
+        # format (MB, GB) here, NOT Kubernetes resource notation (Mi, Gi)
+        # — "300Mi" is rejected by the admission webhook.
+        size: "300MB"
+    duration: "60s"
